@@ -30,7 +30,7 @@
 > - Novamente, lembre-se que você *não pode utilizar ferramentas
 >   de IA para escrever este relatório*
 
-<mark>`[descritos aqui](PROMPTS.md)`</mark>
+<mark>[descritos aqui](PROMPTS.md)</mark>
 
 ## Principais dificuldades encontradas durante o desenvolvimento (formato livre)
 
