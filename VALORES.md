@@ -1,7 +1,7 @@
 # VALORES
 
 ## defines
-#define COELHOS_VERDES 24
-#define COELHOS_AMARELOS 15
-#define COELHOS_AZUIS 8
+#define COELHOS_VERDES 24  
+#define COELHOS_AMARELOS 15  
+#define COELHOS_AZUIS 8  
 
