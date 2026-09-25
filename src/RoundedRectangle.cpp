@@ -241,31 +241,6 @@ glm::vec3 RoundedRectangle::direction(float distance) const
     );
 }
 
-std::vector<glm::vec3> RoundedRectangle::getPositions(
-    int numberOfPositions
-) const
-{
-    std::vector<glm::vec3> positions;
-
-    if (numberOfPositions <= 0)
-    {
-        return positions;
-    }
-
-    positions.reserve(numberOfPositions);
-
-    for (int i = 0; i < numberOfPositions; ++i)
-    {
-        float distance =
-            static_cast<float>(i) * totalLength / numberOfPositions;
-
-        positions.push_back(position(distance));
-    }
-
-    return positions;
-}
-
-
 float RoundedRectangle::length() const
 {
     return totalLength;

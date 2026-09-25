@@ -342,7 +342,7 @@ int main(int argc, char* argv[])
     float b = 2.0f;
     Diamond diamante(b * 20.0f/14.0f, b, 0.1f);
     // inicializa trajetoria em circulo
-    float c = 1.5f;
+    float c = 1.2f;
     Circle circulo(c/2.0f);
 
     // Inicilização para Delta Time
@@ -375,6 +375,7 @@ int main(int argc, char* argv[])
     }
 
     // Inicializa os coelhos azuis
+    i=0;
     for (Coelho3D &c : azuis)
     {
         c.distancia = static_cast<float>(i++) * circulo.length() / std::size(azuis);
