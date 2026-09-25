@@ -13,6 +13,7 @@ set(SOURCES
   src/glad.c
   src/RoundedRectangle.cpp
   src/Diamond.cpp
+  src/circle.cpp
 )
 
 cmake_minimum_required(VERSION 3.5.0)

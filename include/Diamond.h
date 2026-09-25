@@ -1,3 +1,5 @@
+// CLASSE GERADA POR IA
+
 #ifndef DIAMOND_H
 #define DIAMOND_H
 

@@ -1,16 +1,13 @@
-#include "../include/Diamond.h"
+// CLASSE GERADA POR IA
+
+#include "Diamond.h"
+
+#include <cmath>
+#include <algorithm>
 
 #include <glm/gtc/constants.hpp>
 
-#include <algorithm>
-#include <cmath>
-
-
-Diamond::Diamond(
-    float width,
-    float height,
-    float radius
-)
+Diamond::Diamond(float width, float height, float radius)
     : width(width),
       height(height),
       radius(radius),
@@ -19,233 +16,179 @@ Diamond::Diamond(
     build();
 }
 
-
 void Diamond::build()
 {
     segments.clear();
+    totalLength = 0.0f;
 
-    /*
-        Vértices do losango:
-
-                top
-                 /\
-                /  \
-          left /    \ right
-               \    /
-                \  /
-                 \/
-               bottom
-
-        A trajetória percorre:
-
-        top -> right -> bottom -> left -> top
-    */
-
-    const glm::vec3 vertices[4] =
+    // Vértices do losango:
+    //
+    //             0
+    //            / \
+    //           /   \
+    //          3     1
+    //           \   /
+    //            \ /
+    //             2
+    //
+    glm::vec3 vertices[4] =
     {
-        { 0.0f,        0.0f, -height / 2.0f }, // top
-        { width / 2.0f, 0.0f,  0.0f        },  // right
-        { 0.0f,        0.0f,  height / 2.0f }, // bottom
-        {-width / 2.0f, 0.0f,  0.0f        }   // left
+        glm::vec3(0.0f,        0.0f, -height / 2.0f), // topo
+        glm::vec3(width / 2.0f, 0.0f,  0.0f),         // direita
+        glm::vec3(0.0f,        0.0f,  height / 2.0f), // baixo
+        glm::vec3(-width / 2.0f, 0.0f, 0.0f)          // esquerda
     };
-
-
-    /*
-        Calcula os pontos de tangência e centros
-        dos quatro cantos arredondados.
-    */
 
     glm::vec3 tangentBefore[4];
     glm::vec3 tangentAfter[4];
     glm::vec3 centers[4];
 
+    float startAngles[4];
+    float endAngles[4];
 
+    // Calcula os pontos de tangência e os centros dos quatro arcos.
     for (int i = 0; i < 4; ++i)
     {
-        const glm::vec3& vertex = vertices[i];
-
-        const glm::vec3& previous =
-            vertices[(i + 3) % 4];
-
-        const glm::vec3& next =
-            vertices[(i + 1) % 4];
-
+        int previous = (i + 3) % 4;
+        int next = (i + 1) % 4;
 
         glm::vec3 toPrevious =
-            glm::normalize(previous - vertex);
+            glm::normalize(vertices[previous] - vertices[i]);
 
         glm::vec3 toNext =
-            glm::normalize(next - vertex);
-
-
-        /*
-            Ângulo interno do vértice.
-        */
+            glm::normalize(vertices[next] - vertices[i]);
 
         float cosTheta =
             glm::dot(toPrevious, toNext);
 
-        cosTheta =
-            std::clamp(cosTheta, -1.0f, 1.0f);
+        if (cosTheta < -1.0f)
+            cosTheta = -1.0f;
+        else if (cosTheta > 1.0f)
+            cosTheta = 1.0f;
 
-        float theta =
-            std::acos(cosTheta);
+        float theta = std::acos(cosTheta);
 
-
-        /*
-            Distância entre o vértice e cada ponto
-            de tangência.
-        */
-
+        // Distância do vértice até cada ponto de tangência.
         float tangentDistance =
             radius / std::tan(theta / 2.0f);
 
-
         tangentBefore[i] =
-            vertex + toPrevious * tangentDistance;
+            vertices[i] + toPrevious * tangentDistance;
 
         tangentAfter[i] =
-            vertex + toNext * tangentDistance;
+            vertices[i] + toNext * tangentDistance;
 
-
-        /*
-            Centro do círculo.
-
-            O centro está sobre a bissetriz
-            do ângulo interno.
-        */
+        // Distância do vértice até o centro do arco.
+        float centerDistance =
+            radius / std::sin(theta / 2.0f);
 
         glm::vec3 bisector =
             glm::normalize(toPrevious + toNext);
 
-        float centerDistance =
-            radius / std::sin(theta / 2.0f);
-
         centers[i] =
-            vertex + bisector * centerDistance;
+            vertices[i] + bisector * centerDistance;
+
+        // Ângulos dos pontos de tangência em relação ao centro.
+        glm::vec3 before =
+            tangentBefore[i] - centers[i];
+
+        glm::vec3 after =
+            tangentAfter[i] - centers[i];
+
+        startAngles[i] =
+            std::atan2(before.z, before.x);
+
+        endAngles[i] =
+            std::atan2(after.z, after.x);
     }
 
-
-    /*
-        Cada lado reto vai do ponto de tangência
-        depois de um canto até o ponto de tangência
-        antes do próximo canto.
-    */
-
-    totalLength = 0.0f;
-
-
+    // Cria os 8 segmentos:
+    //
+    // linha -> arco -> linha -> arco -> ...
+    //
     for (int i = 0; i < 4; ++i)
     {
-        int next =
-            (i + 1) % 4;
+        int next = (i + 1) % 4;
 
+        // -------------------------------------------------
+        // Linha entre o arco do vértice atual e o próximo
+        // -------------------------------------------------
 
-        // Lado reto
+        Segment line;
 
-        glm::vec3 p0 =
-            tangentAfter[i];
+        line.type = SegmentType::LINE;
 
-        glm::vec3 p1 =
-            tangentBefore[next];
+        line.p0 = tangentAfter[i];
+        line.p1 = tangentBefore[next];
 
-        float lineLength =
-            glm::length(p1 - p0);
+        line.length =
+            glm::length(line.p1 - line.p0);
 
+        line.center = glm::vec3(0.0f);
+        line.radius = 0.0f;
+        line.startAngle = 0.0f;
+        line.angleDelta = 0.0f;
 
-        segments.push_back({
-            SegmentType::LINE,
-            lineLength,
-            p0,
-            p1,
-            glm::vec3(0.0f),
-            0.0f,
-            0.0f,
-            0.0f
-        });
+        segments.push_back(line);
 
-        totalLength += lineLength;
+        totalLength += line.length;
 
+        // -------------------------------------------------
+        // Arco do próximo vértice
+        // -------------------------------------------------
 
-        // Arco no próximo vértice
+        Segment arc;
 
-        const glm::vec3& center =
-            centers[next];
+        arc.type = SegmentType::ARC;
 
-        glm::vec3 start =
-            tangentBefore[next] - center;
+        arc.p0 = tangentBefore[next];
+        arc.p1 = tangentAfter[next];
 
-        glm::vec3 end =
-            tangentAfter[next] - center;
+        arc.center = centers[next];
+        arc.radius = radius;
 
+        arc.startAngle = startAngles[next];
 
-        float startAngle =
-            std::atan2(start.z, start.x);
+        // O arco deve percorrer a parte externa da curva.
+        arc.angleDelta =
+            endAngles[next] - startAngles[next];
 
-        float endAngle =
-            std::atan2(end.z, end.x);
+        while (arc.angleDelta <= 0.0f)
+        {
+            arc.angleDelta += glm::two_pi<float>();
+        }
 
+        arc.length =
+            radius * std::abs(arc.angleDelta);
 
-        /*
-            O losango é percorrido no sentido
-            top -> right -> bottom -> left.
+        segments.push_back(arc);
 
-            Os arcos precisam seguir o mesmo sentido
-            da trajetória.
-        */
-
-        float angleDelta =
-            endAngle - startAngle;
-
-        while (angleDelta >= 0.0f)
-            angleDelta -= glm::two_pi<float>();
-
-
-        float arcLength =
-            radius * std::abs(angleDelta);
-
-
-        segments.push_back({
-            SegmentType::ARC,
-            arcLength,
-            glm::vec3(0.0f),
-            glm::vec3(0.0f),
-            center,
-            radius,
-            startAngle,
-            angleDelta
-        });
-
-        totalLength += arcLength;
+        totalLength += arc.length;
     }
 }
-
 
 int Diamond::findSegment(
     float distance,
     float& localDistance
 ) const
 {
+    if (segments.empty())
+    {
+        localDistance = 0.0f;
+        return -1;
+    }
+
     distance =
         std::fmod(distance, totalLength);
 
     if (distance < 0.0f)
         distance += totalLength;
 
-
     float accumulated = 0.0f;
 
-
-    for (int i = 0;
-         i < static_cast<int>(segments.size());
-         ++i)
+    for (int i = 0; i < static_cast<int>(segments.size()); ++i)
     {
-        const Segment& segment =
-            segments[i];
-
-
-        if (distance <
-            accumulated + segment.length)
+        if (distance < accumulated + segments[i].length)
         {
             localDistance =
                 distance - accumulated;
@@ -253,43 +196,48 @@ int Diamond::findSegment(
             return i;
         }
 
-
-        accumulated += segment.length;
+        accumulated += segments[i].length;
     }
 
-
+    // Caso especial para evitar problemas de ponto flutuante.
     localDistance = 0.0f;
 
-    return 0;
+    return static_cast<int>(segments.size()) - 1;
 }
-
 
 glm::vec3 Diamond::position(float distance) const
 {
-    float localDistance;
+    float localDistance = 0.0f;
 
     int index =
         findSegment(distance, localDistance);
 
+    if (index < 0)
+        return glm::vec3(0.0f);
+
     const Segment& segment =
         segments[index];
 
+    if (segment.type == SegmentType::LINE)
+    {
+        float t =
+            localDistance / segment.length;
+
+        return
+            segment.p0 +
+            (segment.p1 - segment.p0) * t;
+    }
+
+    // -----------------------------------------------------
+    // Arco
+    // -----------------------------------------------------
 
     float u =
         localDistance / segment.length;
 
-
-    if (segment.type == SegmentType::LINE)
-    {
-        return segment.p0 +
-               (segment.p1 - segment.p0) * u;
-    }
-
-
     float theta =
         segment.startAngle +
         segment.angleDelta * u;
-
 
     return segment.center +
            glm::vec3(
@@ -299,17 +247,18 @@ glm::vec3 Diamond::position(float distance) const
            );
 }
 
-
 glm::vec3 Diamond::direction(float distance) const
 {
-    float localDistance;
+    float localDistance = 0.0f;
 
     int index =
         findSegment(distance, localDistance);
 
+    if (index < 0)
+        return glm::vec3(0.0f);
+
     const Segment& segment =
         segments[index];
-
 
     if (segment.type == SegmentType::LINE)
     {
@@ -318,6 +267,9 @@ glm::vec3 Diamond::direction(float distance) const
         );
     }
 
+    // -----------------------------------------------------
+    // Tangente ao arco
+    // -----------------------------------------------------
 
     float u =
         localDistance / segment.length;
@@ -326,46 +278,29 @@ glm::vec3 Diamond::direction(float distance) const
         segment.startAngle +
         segment.angleDelta * u;
 
-
-    /*
-        Derivada da posição do círculo.
-
-        O sinal depende do sentido do arco.
-    */
-
-    float sign =
-        segment.angleDelta < 0.0f
-        ? -1.0f
-        : 1.0f;
-
-
     return glm::normalize(
         glm::vec3(
-            -std::sin(theta) * sign,
+            -std::sin(theta),
             0.0f,
-             std::cos(theta) * sign
+            std::cos(theta)
         )
     );
 }
-
 
 float Diamond::length() const
 {
     return totalLength;
 }
 
-
 float Diamond::getWidth() const
 {
     return width;
 }
 
-
 float Diamond::getHeight() const
 {
     return height;
 }
-
 
 float Diamond::getRadius() const
 {

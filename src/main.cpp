@@ -49,6 +49,7 @@
 #include "matrices.h"
 #include "../include/RoundedRectangle.h"
 #include "../include/Diamond.h"
+#include "../include/Circle.h"
 
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -331,13 +332,18 @@ int main(int argc, char* argv[])
 
     // Inicializa os grupos de coelhos com seus chapeus
     Coelho3D verdes[24];
-    Coelho3D amarelos[18];
+    Coelho3D amarelos[15];
     Coelho3D azuis[8];
 
     // Iniciliza a trajetória retangular
     float a = 2.5f;
     RoundedRectangle retangulo(a * 20.0f/14.0f, a, 0.15f);
-    D
+    // Inicializa a tragetória em diamante
+    float b = 2.0f;
+    Diamond diamante(b * 20.0f/14.0f, b, 0.1f);
+    // inicializa trajetoria em circulo
+    float c = 1.5f;
+    Circle circulo(c/2.0f);
 
     // Inicilização para Delta Time
     auto lastTime = std::chrono::high_resolution_clock::now();
@@ -345,18 +351,37 @@ int main(int argc, char* argv[])
     // inicializa os coelhos verdes
     int i = 0;
     for (Coelho3D &c : verdes)
-        {
-            c.distancia =
-                static_cast<float>(i++) * retangulo.length() / 24.0f;
+    {
+        c.distancia =
+            static_cast<float>(i++) * retangulo.length() / std::size(verdes);
 
-            c.PosicaoCoelho = retangulo.position(c.distancia);
+        c.PosicaoCoelho = retangulo.position(c.distancia);
 
-            c.direcao =
-                retangulo.direction(c.distancia); 
+        c.direcao =
+            retangulo.direction(c.distancia); 
 
-            c.angulo =
-                std::atan2(c.direcao.x, c.direcao.z);
-        }
+        c.angulo =
+            std::atan2(c.direcao.x, c.direcao.z);
+    }
+
+    // Inicializa os coelhos amarelos
+    i=0;
+    for (Coelho3D &c : amarelos)
+    {
+        c.distancia = static_cast<float>(i++) * diamante.length() / std::size(amarelos);
+        c.PosicaoCoelho = diamante.position(c.distancia);
+        c.direcao = diamante.direction(c.distancia);
+        c.angulo = std::atan2(c.direcao.x, c.direcao.z);
+    }
+
+    // Inicializa os coelhos azuis
+    for (Coelho3D &c : azuis)
+    {
+        c.distancia = static_cast<float>(i++) * circulo.length() / std::size(azuis);
+        c.PosicaoCoelho = circulo.position(c.distancia);
+        c.direcao = circulo.direction(c.distancia);
+        c.angulo = std::atan2(c.direcao.x, c.direcao.z);
+    }
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
@@ -450,15 +475,34 @@ int main(int argc, char* argv[])
         float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
         lastTime = currentTime;
 
-        float speed = 1.0f;
+        float speed = 1.0f/24.0f;
         //atualiza os coelhos verdes
         for (Coelho3D &c : verdes)
         {
             //multiplica atualiza a distancia baseada no tempo
-            c.distancia += speed * deltaTime;
+            c.distancia += speed * deltaTime * std::size(verdes);
             c.distancia = fmod(c.distancia, retangulo.length());
             c.PosicaoCoelho = retangulo.position(c.distancia);
             c.direcao = retangulo.direction(c.distancia);
+            c.angulo = atan2(c.direcao.x, c.direcao.z);
+        }
+        //atualiza os coelhos amarelos
+        for (Coelho3D &c : amarelos)
+        {
+            //multiplica atualiza a distancia baseada no tempo
+            c.distancia += speed * deltaTime * std::size(amarelos);
+            c.distancia = fmod(c.distancia, diamante.length());
+            c.PosicaoCoelho = diamante.position(c.distancia);
+            c.direcao = diamante.direction(c.distancia);
+            c.angulo = atan2(c.direcao.x, c.direcao.z);
+        }
+        //atualiza os coelhos azuis
+        for (Coelho3D &c : azuis)
+        {
+            c.distancia += speed * deltaTime * std::size(azuis);
+            c.distancia = fmod(c.distancia, circulo.length());
+            c.PosicaoCoelho = circulo.position(c.distancia);
+            c.direcao = circulo.direction(c.distancia);
             c.angulo = atan2(c.direcao.x, c.direcao.z);
         }
 
@@ -477,6 +521,40 @@ int main(int argc, char* argv[])
             glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(g_object_id_uniform, BUNNY);
             glUniform1i(g_surface_type_uniform, JADE_SURFACE);
+            DrawVirtualObject("the_bunny");
+            // Desenham o chapeu usando a esfera
+            model = chao * posicao_coelho * rotacao_coelho * chapeu * escala * achatamento;
+            glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(g_object_id_uniform, SPHERE);
+            glUniform1i(g_surface_type_uniform, RED_VELVET_SURFACE);
+            DrawVirtualObject("the_sphere");
+        }
+        // Desenha os coelhos amarelos
+        for (const Coelho3D &c : amarelos)
+        {
+            glm::mat4 posicao_coelho = Matrix_Translate(c.PosicaoCoelho.x, c.PosicaoCoelho.y, c.PosicaoCoelho.z);
+            glm::mat4 rotacao_coelho = Matrix_Rotate_Y(c.angulo + glm::half_pi<float>());
+            model = chao * posicao_coelho * rotacao_coelho * escala;
+            glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(g_object_id_uniform, BUNNY);
+            glUniform1i(g_surface_type_uniform, GOLD_SURFACE);
+            DrawVirtualObject("the_bunny");
+            // Desenham o chapeu usando a esfera
+            model = chao * posicao_coelho * rotacao_coelho * chapeu * escala * achatamento;
+            glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(g_object_id_uniform, SPHERE);
+            glUniform1i(g_surface_type_uniform, RED_VELVET_SURFACE);
+            DrawVirtualObject("the_sphere");
+        }
+        // Desenha os coelhos azuis
+        for (const Coelho3D &c : azuis)
+        {
+            glm::mat4 posicao_coelho = Matrix_Translate(c.PosicaoCoelho.x, c.PosicaoCoelho.y, c.PosicaoCoelho.z);
+            glm::mat4 rotacao_coelho = Matrix_Rotate_Y(c.angulo + glm::half_pi<float>());
+            model = chao * posicao_coelho * rotacao_coelho * escala;
+            glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(g_object_id_uniform, BUNNY);
+            glUniform1i(g_surface_type_uniform, BLUE_PLASTIC_SURFACE);
             DrawVirtualObject("the_bunny");
             // Desenham o chapeu usando a esfera
             model = chao * posicao_coelho * rotacao_coelho * chapeu * escala * achatamento;

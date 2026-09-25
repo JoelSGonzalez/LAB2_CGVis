@@ -1,3 +1,5 @@
+//CLASSE GERADA POR IA
+
 #include "../include/RoundedRectangle.h"
 
 #include <glm/gtc/constants.hpp>
