@@ -35,6 +35,7 @@ Crie uma estrutura Coelho3D que armazene:
 - ângulo local de rotação em torno do eixo Y,  
 - vetor direção de deslocamento,  
 - distancia ao longo de um trajeto.  
+  
 Crie vetores Coelho3D <mark>[com seus tamanhos](VALORES.md)</mark>  separando os em 3 grupos por cor;  
 Gere 3 classes de trajetória que definirão o deslocamento de cada grupo;  
 Adicione os arquivos .cpp das classes à lista de arquivos de compilação no arquivo CMakeList.txt;  
@@ -44,7 +45,16 @@ Inclua a biblioteca chrono para uso de DeltaTime;
 Implemente as variaveis de DeltaTime e sua atualização no laço principal;  
 Atualize as posições de cada grupo percorrendo seus vetores;  
 > [!IMPORTANT]
-> Use 'c.distancia += speed * deltaTime * retangulo.length();' para velocidade uniforme;  
+> - Use 'c.distancia += speed * deltaTime * retangulo.length();' para velocidade uniforme;  
+
+Para cada grupo um laço que:
+- Desenhe o coelho utilizando o material adequado;
+- Desenhe o chapeu usando o offset
+> [!IMPORTANT]
+> - Use 'model = chao * posicao_coelho * rotacao_coelho * escala;' para o coelho;
+> - Use 'chao * posicao_coelho * rotacao_coelho * chapeu * escala * achatamento;'  para o chaoeu
+
+
 Os prompts para geração das classes de trajetória são <mark>[descritos aqui](PROMPTS.md)</mark>  
 Valores testados manualmente por comparação <mark>[descritos aqui](VALORES.md)</mark>  
 
