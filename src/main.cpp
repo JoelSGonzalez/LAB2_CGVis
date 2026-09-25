@@ -480,7 +480,7 @@ int main(int argc, char* argv[])
         //atualiza os coelhos verdes
         for (Coelho3D &c : verdes)
         {
-            //multiplica atualiza a distancia baseada no tempo
+            // atualiza a distancia baseada no tempo e tamanho do trajeto
             c.distancia += speed * deltaTime * retangulo.length();
             c.distancia = fmod(c.distancia, retangulo.length());
             c.PosicaoCoelho = retangulo.position(c.distancia);
@@ -490,7 +490,7 @@ int main(int argc, char* argv[])
         //atualiza os coelhos amarelos
         for (Coelho3D &c : amarelos)
         {
-            //multiplica atualiza a distancia baseada no tempo
+            // atualiza a distancia baseada no tempo e tamanho do trajeto
             c.distancia += speed * deltaTime * diamante.length();
             c.distancia = fmod(c.distancia, diamante.length());
             c.PosicaoCoelho = diamante.position(c.distancia);
@@ -500,6 +500,7 @@ int main(int argc, char* argv[])
         //atualiza os coelhos azuis
         for (Coelho3D &c : azuis)
         {
+            // atualiza a distancia baseada no tempo e tamanho do trajeto
             c.distancia += speed * deltaTime * circulo.length();
             c.distancia = fmod(c.distancia, circulo.length());
             c.PosicaoCoelho = circulo.position(c.distancia);
