@@ -476,12 +476,12 @@ int main(int argc, char* argv[])
         float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
         lastTime = currentTime;
 
-        float speed = 1.0f/24.0f;
+        float speed = 0.1f;
         //atualiza os coelhos verdes
         for (Coelho3D &c : verdes)
         {
             //multiplica atualiza a distancia baseada no tempo
-            c.distancia += speed * deltaTime * std::size(verdes);
+            c.distancia += speed * deltaTime * retangulo.length();
             c.distancia = fmod(c.distancia, retangulo.length());
             c.PosicaoCoelho = retangulo.position(c.distancia);
             c.direcao = retangulo.direction(c.distancia);
@@ -491,7 +491,7 @@ int main(int argc, char* argv[])
         for (Coelho3D &c : amarelos)
         {
             //multiplica atualiza a distancia baseada no tempo
-            c.distancia += speed * deltaTime * std::size(amarelos);
+            c.distancia += speed * deltaTime * diamante.length();
             c.distancia = fmod(c.distancia, diamante.length());
             c.PosicaoCoelho = diamante.position(c.distancia);
             c.direcao = diamante.direction(c.distancia);
@@ -500,7 +500,7 @@ int main(int argc, char* argv[])
         //atualiza os coelhos azuis
         for (Coelho3D &c : azuis)
         {
-            c.distancia += speed * deltaTime * std::size(azuis);
+            c.distancia += speed * deltaTime * circulo.length();
             c.distancia = fmod(c.distancia, circulo.length());
             c.PosicaoCoelho = circulo.position(c.distancia);
             c.direcao = circulo.direction(c.distancia);
