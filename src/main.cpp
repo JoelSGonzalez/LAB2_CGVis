@@ -218,11 +218,10 @@ GLint g_projection_uniform;
 GLint g_object_id_uniform;
 GLint g_surface_type_uniform;
 
-struct CoelhoDeChapeu{
+struct Coelho3D{
     glm::vec3 PosicaoCoelho;
-    glm::vec3 PosicaoChapeu;
     float direcao;
-    float angulo;
+    float distancia;
 };
 
 int main(int argc, char* argv[])
@@ -329,9 +328,9 @@ int main(int argc, char* argv[])
     glFrontFace(GL_CCW);
 
     // Inicializa os grupos de coelhos com seus chapeus
-    CoelhoDeChapeu verdes[24];
-    CoelhoDeChapeu amarelos[18];
-    CoelhoDeChapeu azuis[8];
+    Coelho3D verdes[24];
+    Coelho3D amarelos[18];
+    Coelho3D azuis[8];
 
     // Iniciliza a trajetória retangular
     float a = 2.5f;
@@ -341,26 +340,22 @@ int main(int argc, char* argv[])
     auto lastTime = std::chrono::high_resolution_clock::now();
     
     // inicializa os coelhos verdes
-    for (int i = 0; i < 24; ++i)
+    int i = 0;
+    for (Coelho3D &c : verdes)
         {
-            float distancia =
-                static_cast<float>(i) * retangulo.length() / 24.0f;
+            c.distancia =
+                static_cast<float>(i++) * retangulo.length() / 24.0f;
 
             glm::vec3 posicao =
-                retangulo.position(distancia);
+                retangulo.position(c.distancia);
 
             glm::vec3 direcao =
-                retangulo.direction(distancia);
+                retangulo.direction(c.distancia);
 
-            verdes[i].PosicaoCoelho = posicao;
+            c.PosicaoCoelho = posicao;
 
-            verdes[i].PosicaoChapeu =
-                posicao + glm::vec3(0.0f, 0.5f, 0.0f);
-
-            verdes[i].direcao =
+            c.direcao =
                 std::atan2(direcao.x, direcao.z);
-
-            verdes[i].angulo = 0.0f;
         }
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
@@ -455,24 +450,35 @@ int main(int argc, char* argv[])
         float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
         lastTime = currentTime;
 
+        float speed = 2.0f;
+        //atualiza os coelhos verdes
+        for (Coelho3D &c : verdes)
+        {
+            //multiplica atualiza a distancia baseada no tempo
+            c.distancia += speed * deltaTime;
+            c.distancia = fmod(c.distancia, retangulo.length());
+            c.PosicaoCoelho = retangulo.position(c.distancia);
+            c.direcao = retangulo.direction(c.distancia);
+        }
+
         glm::mat4 escala = Matrix_Scale(0.2f, 0.2f, 0.2f);
         glm::mat4 chao = Matrix_Translate(0.0f,-0.80f,0.0f);
-        glm::mat4 offset = Matrix_Translate(-0.14f,0.1f,0.042f);
         glm::mat4 achatamento = Matrix_Scale(0.45f,0.13f,.45f);
+        glm::mat4 chapeu = Matrix_Translate(-0.14f,0.12f,0.042f); // posição relativa do chapéu em relação ao centro do coelho
 
 
         // Desenha os coelhos verdes
-        for (int i=0;i<24;i++)
+        for (const Coelho3D &c : verdes)
         {
-            glm::mat4 position2D = Matrix_Translate(verdes[i].PosicaoCoelho.x, verdes[i].PosicaoCoelho.y, verdes[i].PosicaoCoelho.z);
-            glm::mat4 rotationY = Matrix_Rotate_Y(verdes[i].direcao + glm::half_pi<float>());
-            model = chao * position2D * rotationY * escala;
+            glm::mat4 posicao_coelho = Matrix_Translate(c.PosicaoCoelho.x, c.PosicaoCoelho.y, c.PosicaoCoelho.z);
+            glm::mat4 rotacao_coelho = Matrix_Rotate_Y(c.direcao + glm::half_pi<float>());
+            model = chao * posicao_coelho * rotacao_coelho * escala;
             glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(g_object_id_uniform, BUNNY);
             glUniform1i(g_surface_type_uniform, JADE_SURFACE);
             DrawVirtualObject("the_bunny");
             // Desenham o chapeu usando a esfera
-            model = chao * position2D * rotationY * offset * escala * achatamento;
+            model = chao * posicao_coelho * rotacao_coelho * chapeu * escala * achatamento;
             glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(g_object_id_uniform, SPHERE);
             glUniform1i(g_surface_type_uniform, RED_VELVET_SURFACE);
