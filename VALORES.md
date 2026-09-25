@@ -6,7 +6,7 @@
 #define COELHOS_AZUIS       8  
 
 ## variaveis
-float proporcao = 20.0f / 14.0f;
+float proporcao = 20.0f / 14.0f;  
 float speed = 0.1f;  
 
 ## trajetórias
