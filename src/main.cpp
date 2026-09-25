@@ -48,6 +48,7 @@
 #include "utils.h"
 #include "matrices.h"
 #include "../include/RoundedRectangle.h"
+#include "../include/Diamond.h"
 
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -220,8 +221,9 @@ GLint g_surface_type_uniform;
 
 struct Coelho3D{
     glm::vec3 PosicaoCoelho;
-    float direcao;
+    glm::vec3 direcao;
     float distancia;
+    float angulo;
 };
 
 int main(int argc, char* argv[])
@@ -334,7 +336,8 @@ int main(int argc, char* argv[])
 
     // Iniciliza a trajetória retangular
     float a = 2.5f;
-    RoundedRectangle retangulo(a * 20.0f/14.0f, a, 0.3f);
+    RoundedRectangle retangulo(a * 20.0f/14.0f, a, 0.15f);
+    D
 
     // Inicilização para Delta Time
     auto lastTime = std::chrono::high_resolution_clock::now();
@@ -346,16 +349,13 @@ int main(int argc, char* argv[])
             c.distancia =
                 static_cast<float>(i++) * retangulo.length() / 24.0f;
 
-            glm::vec3 posicao =
-                retangulo.position(c.distancia);
-
-            glm::vec3 direcao =
-                retangulo.direction(c.distancia);
-
-            c.PosicaoCoelho = posicao;
+            c.PosicaoCoelho = retangulo.position(c.distancia);
 
             c.direcao =
-                std::atan2(direcao.x, direcao.z);
+                retangulo.direction(c.distancia); 
+
+            c.angulo =
+                std::atan2(c.direcao.x, c.direcao.z);
         }
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
@@ -450,7 +450,7 @@ int main(int argc, char* argv[])
         float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
         lastTime = currentTime;
 
-        float speed = 2.0f;
+        float speed = 1.0f;
         //atualiza os coelhos verdes
         for (Coelho3D &c : verdes)
         {
@@ -459,6 +459,7 @@ int main(int argc, char* argv[])
             c.distancia = fmod(c.distancia, retangulo.length());
             c.PosicaoCoelho = retangulo.position(c.distancia);
             c.direcao = retangulo.direction(c.distancia);
+            c.angulo = atan2(c.direcao.x, c.direcao.z);
         }
 
         glm::mat4 escala = Matrix_Scale(0.2f, 0.2f, 0.2f);
@@ -471,7 +472,7 @@ int main(int argc, char* argv[])
         for (const Coelho3D &c : verdes)
         {
             glm::mat4 posicao_coelho = Matrix_Translate(c.PosicaoCoelho.x, c.PosicaoCoelho.y, c.PosicaoCoelho.z);
-            glm::mat4 rotacao_coelho = Matrix_Rotate_Y(c.direcao + glm::half_pi<float>());
+            glm::mat4 rotacao_coelho = Matrix_Rotate_Y(c.angulo + glm::half_pi<float>());
             model = chao * posicao_coelho * rotacao_coelho * escala;
             glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(g_object_id_uniform, BUNNY);

@@ -12,6 +12,7 @@ set(SOURCES
   src/tiny_obj_loader.cpp
   src/glad.c
   src/RoundedRectangle.cpp
+  src/Diamond.cpp
 )
 
 cmake_minimum_required(VERSION 3.5.0)
