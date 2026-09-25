@@ -508,10 +508,10 @@ int main(int argc, char* argv[])
             c.angulo = atan2(c.direcao.x, c.direcao.z);
         }
 
-        glm::mat4 escala = Matrix_Scale(0.2f, 0.2f, 0.2f);
-        glm::mat4 chao = Matrix_Translate(0.0f,-0.80f,0.0f);
-        glm::mat4 achatamento = Matrix_Scale(0.45f,0.13f,.45f);
-        glm::mat4 chapeu = Matrix_Translate(-0.14f,0.12f,0.042f); // posição relativa do chapéu em relação ao centro do coelho
+        glm::mat4 chao = Matrix_Translate(0.0f,-0.80f,0.0f);        // posiciona os coelhos rente ao plano (coordenadas globais)
+        glm::mat4 chapeu = Matrix_Translate(-0.14f,0.12f,0.042f);   // posição do chapéu relativa ao centro do coelho (coordenadas locais)  
+        glm::mat4 escala = Matrix_Scale(0.2f, 0.2f, 0.2f);          // reduz o tamanho dos coelhos e chapeus  
+        glm::mat4 achatamento = Matrix_Scale(0.45f,0.13f,.45f);     // deforma a esfera para o formato de chaoeu 
 
 
         // Desenha os coelhos verdes
