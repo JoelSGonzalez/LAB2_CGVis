@@ -30,6 +30,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
+#include <chrono>
 
 // Headers das bibliotecas OpenGL
 #include <glad/glad.h>   // Criação de contexto OpenGL 3.3
@@ -46,6 +47,7 @@
 // Headers locais, definidos na pasta "include/"
 #include "utils.h"
 #include "matrices.h"
+#include "../include/RoundedRectangle.h"
 
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -216,6 +218,13 @@ GLint g_projection_uniform;
 GLint g_object_id_uniform;
 GLint g_surface_type_uniform;
 
+struct CoelhoDeChapeu{
+    glm::vec3 PosicaoCoelho;
+    glm::vec3 PosicaoChapeu;
+    float direcao;
+    float angulo;
+};
+
 int main(int argc, char* argv[])
 {
     // Inicializamos a biblioteca GLFW, utilizada para criar uma janela do
@@ -319,6 +328,41 @@ int main(int argc, char* argv[])
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
+    // Inicializa os grupos de coelhos com seus chapeus
+    CoelhoDeChapeu verdes[24];
+    CoelhoDeChapeu amarelos[18];
+    CoelhoDeChapeu azuis[8];
+
+    // Iniciliza a trajetória retangular
+    float a = 2.5f;
+    RoundedRectangle retangulo(a * 20.0f/14.0f, a, 0.3f);
+
+    // Inicilização para Delta Time
+    auto lastTime = std::chrono::high_resolution_clock::now();
+    
+    // inicializa os coelhos verdes
+    for (int i = 0; i < 24; ++i)
+        {
+            float distancia =
+                static_cast<float>(i) * retangulo.length() / 24.0f;
+
+            glm::vec3 posicao =
+                retangulo.position(distancia);
+
+            glm::vec3 direcao =
+                retangulo.direction(distancia);
+
+            verdes[i].PosicaoCoelho = posicao;
+
+            verdes[i].PosicaoChapeu =
+                posicao + glm::vec3(0.0f, 0.5f, 0.0f);
+
+            verdes[i].direcao =
+                std::atan2(direcao.x, direcao.z);
+
+            verdes[i].angulo = 0.0f;
+        }
+
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
@@ -372,7 +416,7 @@ int main(int argc, char* argv[])
         {
             // Projeção Perspectiva.
             // Para definição do field of view (FOV), veja slides 205-215 do documento Aula_09_Projecoes.pdf.
-            float field_of_view = 3.141592 / 3.0f;
+            float field_of_view = 3.141592f / 3.0f;
             projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane, farplane);
         }
         else
@@ -406,27 +450,56 @@ int main(int argc, char* argv[])
         #define RED_VELVET_SURFACE   4
         #define JADE_SURFACE         6
 
-        // Desenhamos o modelo da esfera
-        model = Matrix_Translate(-2.0f,0.0f,0.0f);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, SPHERE);
-        glUniform1i(g_surface_type_uniform, RED_VELVET_SURFACE);
-        DrawVirtualObject("the_sphere");
+        // Implementação de Delta Time
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
+        lastTime = currentTime;
 
-        // Desenhamos três coelhos com as cores verde, dourada e azul.
-        const int bunny_surfaces[3] = {
-            JADE_SURFACE,
-            GOLD_SURFACE,
-            BLUE_PLASTIC_SURFACE
-        };
-        for (int i = 0; i < 3; ++i)
+        glm::mat4 escala = Matrix_Scale(0.2f, 0.2f, 0.2f);
+        glm::mat4 chao = Matrix_Translate(0.0f,-0.80f,0.0f);
+        glm::mat4 offset = Matrix_Translate(-0.14f,0.1f,0.042f);
+        glm::mat4 achatamento = Matrix_Scale(0.45f,0.13f,.45f);
+
+
+        // Desenha os coelhos verdes
+        for (int i=0;i<24;i++)
         {
-            model = Matrix_Translate(2.0f * i,0.0f,0.0f);
+            glm::mat4 position2D = Matrix_Translate(verdes[i].PosicaoCoelho.x, verdes[i].PosicaoCoelho.y, verdes[i].PosicaoCoelho.z);
+            glm::mat4 rotationY = Matrix_Rotate_Y(verdes[i].direcao + glm::half_pi<float>());
+            model = chao * position2D * rotationY * escala;
             glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(g_object_id_uniform, BUNNY);
-            glUniform1i(g_surface_type_uniform, bunny_surfaces[i]);
+            glUniform1i(g_surface_type_uniform, JADE_SURFACE);
             DrawVirtualObject("the_bunny");
+            // Desenham o chapeu usando a esfera
+            model = chao * position2D * rotationY * offset * escala * achatamento;
+            glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(g_object_id_uniform, SPHERE);
+            glUniform1i(g_surface_type_uniform, RED_VELVET_SURFACE);
+            DrawVirtualObject("the_sphere");
         }
+
+        // // Desenhamos o modelo da esfera
+        // model = chao * offset * escala * Matrix_Scale(0.4f,0.1f,.4f);
+        // glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        // glUniform1i(g_object_id_uniform, SPHERE);
+        // glUniform1i(g_surface_type_uniform, RED_VELVET_SURFACE);
+        // DrawVirtualObject("the_sphere");
+
+        // // Desenhamos três coelhos com as cores verde, dourada e azul.
+        // const int bunny_surfaces[3] = {
+        //     JADE_SURFACE,
+        //     GOLD_SURFACE,
+        //     BLUE_PLASTIC_SURFACE
+        // };
+        // for (int i = 0; i < 3; ++i)
+        // {
+        //     model = chao * Matrix_Translate(0.5f * i,0.0f,0.0f) * escala;
+        //     glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        //     glUniform1i(g_object_id_uniform, BUNNY);
+        //     glUniform1i(g_surface_type_uniform, bunny_surfaces[i]);
+        //     DrawVirtualObject("the_bunny");
+        // }
 
         // Desenhamos o plano do chão
         model = Matrix_Translate(0.0f,-1.0f,0.0f) * Matrix_Scale(4.0f,1.0f,4.0f);
