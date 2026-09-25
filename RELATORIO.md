@@ -43,7 +43,8 @@ Inicialize as trajetórias <mark>[com seus valores](VALORES.md)</mark>;
 Inclua a biblioteca chrono para uso de DeltaTime;  
 Implemente as variaveis de DeltaTime e sua atualização no laço principal;  
 Atualize as posições de cada grupo percorrendo seus vetores;  
-> [!Important] Use 'c.distancia += speed * deltaTime * retangulo.length();' para velocidade uniforme;  
+> [!IMPORTANT]
+> Use 'c.distancia += speed * deltaTime * retangulo.length();' para velocidade uniforme;  
 Os prompts para geração das classes de trajetória são <mark>[descritos aqui](PROMPTS.md)</mark>  
 Valores testados manualmente por comparação <mark>[descritos aqui](VALORES.md)</mark>  
 
