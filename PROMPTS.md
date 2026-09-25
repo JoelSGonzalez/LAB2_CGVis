@@ -1,3 +1,5 @@
+# PROMPTS
+
 ## Prompt 1:
 Implemente em C++ uma classe RoundedRectangle para representar uma trajetória fechada de retângulo com cantos arredondados no plano XZ, mantendo Y = 0.
 
