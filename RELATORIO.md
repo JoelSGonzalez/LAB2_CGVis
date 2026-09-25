@@ -30,7 +30,8 @@
 > - Novamente, lembre-se que você *não pode utilizar ferramentas
 >   de IA para escrever este relatório*
 
-<mark>[descritos aqui](PROMPTS.md)</mark>
+Valores testados manualmente por comparação <mark>[descritos aqui](VALORES.md)</mark>
+Os prompts para geração das classes de trajetória são <mark>[descritos aqui](PROMPTS.md)</mark>
 
 ## Principais dificuldades encontradas durante o desenvolvimento (formato livre)
 
